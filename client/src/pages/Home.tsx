@@ -69,6 +69,19 @@ export default function Home() {
       <CyberBackground />
 
       <div className="container mx-auto px-6 py-12 space-y-12">
+        {!isAuthenticated && (
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-6 mb-8">
+            <p className="text-muted-foreground mb-4">
+              Join our cybersecurity awareness platform to track your progress and compete with others!
+            </p>
+            <Link href="/login">
+              <Button data-testid="button-login-prompt">
+                Login or Register to Get Started
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -77,9 +90,11 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-welcome">
-                Welcome back, {user?.firstName || user?.email}!
+                {isAuthenticated ? `Welcome back, ${user?.firstName || user?.email}!` : "Cybersecurity Awareness Hub"}
               </h1>
-              <p className="text-muted-foreground">Continue your cybersecurity learning journey</p>
+              <p className="text-muted-foreground">
+                {isAuthenticated ? "Continue your cybersecurity learning journey" : "Learn about cybersecurity threats and best practices"}
+              </p>
             </div>
           </div>
         </div>

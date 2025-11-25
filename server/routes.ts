@@ -6,6 +6,7 @@ import { insertQuizAttemptSchema, insertIncidentReportSchema } from "@shared/sch
 import { eq, desc, count } from "drizzle-orm";
 import { requireAuth } from "./middleware";
 import { setupAuth } from "./replitAuth";
+import { setupLocalAuth } from "./localAuth";
 import OpenAI from "openai";
 
 // Initialize OpenAI client
@@ -16,8 +17,17 @@ const openai = new OpenAI({
 export async function registerRoutes(app: Express) {
   const server = createHttpServer(app);
   
-  // Setup authentication
-  await setupAuth(app, server);
+  // Setup authentication (use local auth for development if enabled)
+  if (process.env.USE_LOCAL_AUTH === "true" || process.env.NODE_ENV === "development") {
+    try {
+      await setupLocalAuth(app);
+    } catch (error) {
+      console.log("Local auth setup failed, falling back to Replit auth");
+      await setupAuth(app, server);
+    }
+  } else {
+    await setupAuth(app, server);
+  }
 
   // Articles endpoints
   app.get("/api/articles", async (req: Request, res: Response) => {

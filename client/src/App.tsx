@@ -18,6 +18,7 @@ import Resources from "@/pages/Resources";
 import IncidentReport from "@/pages/IncidentReport";
 import Admin from "@/pages/Admin";
 import Leaderboard from "@/pages/Leaderboard";
+import Login from "@/pages/Login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -28,6 +29,7 @@ function Router() {
       <main className="flex-1">
         <Switch>
           <Route path="/" component={isLoading ? () => null : isAuthenticated ? Home : Landing} />
+          <Route path="/login" component={Login} />
           <Route path="/learn" component={Learn} />
           <Route path="/article/:slug" component={ArticleDetail} />
           <Route path="/quiz" component={QuizPage} />

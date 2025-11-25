@@ -1,5 +1,9 @@
 import { db } from "./db";
-import { articles, quizzes, quizAttempts, badges } from "@shared/schema";
+import { articles, quizzes, quizAttempts, badges, users } from "@shared/schema";
+import { eq } from "drizzle-orm";
+
+// Simple hash for demo purposes (use bcrypt in production)
+const hashPassword = (password: string) => Buffer.from(password).toString("base64");
 
 const articleData = [
   {
@@ -773,6 +777,21 @@ export async function seedDatabase() {
     await db.delete(quizAttempts);
     await db.delete(articles);
     await db.delete(quizzes);
+
+    // Seed demo user for local auth if it doesn't exist
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, "test@example.com"),
+    });
+    
+    if (!existingUser && process.env.USE_LOCAL_AUTH === "true") {
+      console.log("👤 Creating demo user for local auth...");
+      await db.insert(users).values({
+        email: "test@example.com",
+        firstName: "Test",
+        profileImageUrl: hashPassword("test123"), // Store hashed password temporarily
+      });
+      console.log("✅ Demo user created (test@example.com / test123)");
+    }
 
     // Seed articles
     console.log("📚 Seeding articles...");
