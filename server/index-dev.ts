@@ -8,6 +8,7 @@ import { createServer as createViteServer, createLogger } from "vite";
 
 import viteConfig from "../vite.config";
 import runApp from "./app";
+import { seedDatabase } from "./seed";
 
 export async function setupVite(app: Express, server: Server) {
   const viteLogger = createLogger();
@@ -59,5 +60,12 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 (async () => {
+  // Seed database on startup
+  try {
+    await seedDatabase();
+  } catch (error) {
+    console.error("Failed to seed database:", error);
+  }
+  
   await runApp(setupVite);
 })();
