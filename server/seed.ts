@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { articles, quizzes, quizAttempts } from "@shared/schema";
+import { articles, quizzes, quizAttempts, badges } from "@shared/schema";
 
 const articleData = [
   {
@@ -712,6 +712,57 @@ const quizData = [
       }
     ]
   }
+];
+
+const badgeData = [
+  {
+    name: "First Steps",
+    description: "Complete your first quiz",
+    icon: "Zap",
+    requirement: "Complete 1 quiz",
+  },
+  {
+    name: "Quiz Master",
+    description: "Score 100% on a quiz",
+    icon: "Star",
+    requirement: "Score 100% on any quiz",
+  },
+  {
+    name: "Persistent Learner",
+    description: "Complete 10 quizzes",
+    icon: "BookOpen",
+    requirement: "Complete 10 quizzes",
+  },
+  {
+    name: "Top Performer",
+    description: "Maintain 90% average score",
+    icon: "Trophy",
+    requirement: "Average score of 90%+",
+  },
+  {
+    name: "Security Expert",
+    description: "Read all articles",
+    icon: "Shield",
+    requirement: "View all articles",
+  },
+  {
+    name: "Incident Reporter",
+    description: "File an incident report",
+    icon: "AlertTriangle",
+    requirement: "Submit incident report",
+  },
+  {
+    name: "Community Champion",
+    description: "Rank in top 10 leaderboard",
+    icon: "Users",
+    requirement: "Top 10 leaderboard",
+  },
+  {
+    name: "Cyber Guardian",
+    description: "Complete intermediate & advanced quizzes",
+    icon: "Lock",
+    requirement: "Complete all difficulty levels",
+  },
 ];
 
 export async function seedDatabase() {

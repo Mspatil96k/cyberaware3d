@@ -15,6 +15,9 @@ import ArticleDetail from "@/pages/ArticleDetail";
 import QuizPage from "@/pages/Quiz";
 import Dashboard from "@/pages/Dashboard";
 import Resources from "@/pages/Resources";
+import IncidentReport from "@/pages/IncidentReport";
+import Admin from "@/pages/Admin";
+import Leaderboard from "@/pages/Leaderboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,6 +33,9 @@ function Router() {
           <Route path="/quiz" component={QuizPage} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/resources" component={Resources} />
+          <Route path="/report-incident" component={IncidentReport} />
+          <Route path="/admin" component={Admin} />
+          <Route path="/leaderboard" component={Leaderboard} />
           <Route component={NotFound} />
         </Switch>
       </main>

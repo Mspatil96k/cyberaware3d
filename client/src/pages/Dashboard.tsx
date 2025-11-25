@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CyberBackground } from "@/components/CyberBackground";
-import { Trophy, Brain, TrendingUp, Clock, Calendar } from "lucide-react";
+import { Trophy, Brain, TrendingUp, Clock, Calendar, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import type { QuizAttempt } from "@shared/schema";
 
 export default function Dashboard() {
@@ -13,6 +15,11 @@ export default function Dashboard() {
 
   const { data: attempts, isLoading: attemptsLoading } = useQuery<QuizAttempt[]>({
     queryKey: ["/api/quiz-attempts"],
+    enabled: isAuthenticated && !isLoading,
+  });
+
+  const { data: suggestedQuiz } = useQuery({
+    queryKey: ["/api/quiz/suggested"],
     enabled: isAuthenticated && !isLoading,
   });
 
@@ -171,6 +178,34 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* Suggested Quiz */}
+        {suggestedQuiz && (
+          <Card className="p-8 bg-gradient-to-r from-primary/20 to-chart-2/20 border border-primary/30">
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-primary" />
+                  <span className="font-semibold text-primary">Recommended For You</span>
+                </div>
+                <h3 className="text-2xl font-bold">{suggestedQuiz.title}</h3>
+                <p className="text-muted-foreground">
+                  Based on your performance, we recommend this {suggestedQuiz.difficulty} level quiz.
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="outline" data-testid="badge-category">{suggestedQuiz.category}</Badge>
+                  <Badge variant="outline" data-testid="badge-difficulty">{suggestedQuiz.difficulty}</Badge>
+                </div>
+              </div>
+              <Link href="/quiz">
+                <Button size="lg" className="gap-2" data-testid="button-suggested-quiz">
+                  <Brain className="w-5 h-5" />
+                  Start Quiz
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        )}
+
         {/* Progress Card */}
         {totalQuizzes > 0 && (
           <Card className="p-8 bg-gradient-to-br from-primary/10 via-chart-2/5 to-primary/5 border-primary/20">
@@ -211,7 +246,7 @@ export default function Dashboard() {
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span>Aim for 100% on your next quiz</span>
+                    <span>Check the leaderboard and compete with others</span>
                   </li>
                 </ul>
               </div>

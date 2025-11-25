@@ -1,9 +1,9 @@
 import { createServer as createHttpServer } from "node:http";
 import { type Express, type Request, type Response } from "express";
 import { db } from "./db";
-import { articles, quizzes, quizAttempts } from "@shared/schema";
-import { insertQuizAttemptSchema } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { articles, quizzes, quizAttempts, incidentReports, users, badges, userAchievements } from "@shared/schema";
+import { insertQuizAttemptSchema, insertIncidentReportSchema } from "@shared/schema";
+import { eq, desc, count } from "drizzle-orm";
 import { requireAuth } from "./middleware";
 import { setupAuth } from "./replitAuth";
 import OpenAI from "openai";
@@ -140,7 +140,6 @@ export async function registerRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid message" });
       }
 
-      // Prepare conversation history for OpenAI
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         {
           role: "system",
@@ -157,7 +156,6 @@ Be helpful, accurate, and encourage users to check official resources for import
         },
       ];
 
-      // Add conversation history
       if (Array.isArray(conversationHistory)) {
         conversationHistory.forEach((msg: any) => {
           messages.push({
@@ -167,13 +165,11 @@ Be helpful, accurate, and encourage users to check official resources for import
         });
       }
 
-      // Add current user message
       messages.push({
         role: "user",
         content: message,
       });
 
-      // Call OpenAI API
       const response = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages,
@@ -189,6 +185,137 @@ Be helpful, accurate, and encourage users to check official resources for import
       res.status(500).json({
         error: error.message || "Failed to process chat message",
       });
+    }
+  });
+
+  // Incident Reports endpoints
+  app.post("/api/incident-reports", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const data = insertIncidentReportSchema.parse(req.body);
+      const report = await db
+        .insert(incidentReports)
+        .values({ ...data, userId })
+        .returning();
+
+      res.json(report[0]);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to submit report" });
+    }
+  });
+
+  app.get("/api/incident-reports", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const reports = await db.query.incidentReports.findMany({
+        where: eq(incidentReports.userId, userId),
+        orderBy: desc(incidentReports.createdAt),
+      });
+
+      res.json(reports);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reports" });
+    }
+  });
+
+  // Admin endpoints
+  app.get("/api/admin/stats", requireAuth, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) return res.status(403).json({ error: "Forbidden" });
+
+      const totalUsersResult = await db.select({ count: count() }).from(users);
+      const totalArticlesResult = await db.select({ count: count() }).from(articles);
+      const totalQuizzesResult = await db.select({ count: count() }).from(quizzes);
+
+      res.json({
+        totalUsers: totalUsersResult[0]?.count || 0,
+        totalArticles: totalArticlesResult[0]?.count || 0,
+        totalQuizzes: totalQuizzesResult[0]?.count || 0,
+        activeToday: 0,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // Suggested next quiz based on performance
+  app.get("/api/quiz/suggested", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const attempts = await db.query.quizAttempts.findMany({
+        where: eq(quizAttempts.userId, userId),
+        orderBy: desc(quizAttempts.completedAt),
+        limit: 5,
+      });
+
+      if (attempts.length === 0) {
+        const beginner = await db.query.quizzes.findFirst({
+          where: eq(quizzes.difficulty, "beginner"),
+        });
+        return res.json(beginner);
+      }
+
+      const avgScore = attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length;
+      let difficulty = "beginner";
+      if (avgScore > 80) difficulty = "advanced";
+      else if (avgScore > 60) difficulty = "intermediate";
+
+      const suggested = await db.query.quizzes.findFirst({
+        where: eq(quizzes.difficulty, difficulty),
+      });
+
+      res.json(suggested);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch suggested quiz" });
+    }
+  });
+
+  // Leaderboard endpoint
+  app.get("/api/leaderboard", async (req: Request, res: Response) => {
+    try {
+      const allUsers = await db.query.users.findMany();
+      
+      const leaderboardData = await Promise.all(
+        allUsers.map(async (user) => {
+          const userAttempts = await db.query.quizAttempts.findMany({
+            where: eq(quizAttempts.userId, user.id),
+          });
+
+          const totalScore = userAttempts.reduce((sum, a) => sum + a.score, 0);
+          const averageScore =
+            userAttempts.length > 0
+              ? Math.round(totalScore / userAttempts.length)
+              : 0;
+
+          const userBadges = await db.query.userAchievements.findMany({
+            where: eq(userAchievements.userId, user.id),
+          });
+
+          return {
+            id: user.id,
+            firstName: user.firstName,
+            email: user.email,
+            totalScore,
+            quizCount: userAttempts.length,
+            averageScore,
+            badges: userBadges.length,
+          };
+        })
+      );
+
+      const sorted = leaderboardData
+        .sort((a, b) => b.totalScore - a.totalScore)
+        .slice(0, 50);
+
+      res.json(sorted);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch leaderboard" });
     }
   });
 
