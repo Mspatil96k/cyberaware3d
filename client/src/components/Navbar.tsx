@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Shield, BookOpen, Brain, LayoutDashboard, LogOut } from "lucide-react";
+import { Shield, BookOpen, Brain, LayoutDashboard, LogOut, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -12,11 +12,13 @@ export function Navbar() {
     { path: "/", label: "Home", icon: Shield },
     { path: "/learn", label: "Learn", icon: BookOpen },
     { path: "/quiz", label: "Quiz", icon: Brain },
+    { path: "/resources", label: "Report Fraud", icon: AlertTriangle },
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   ] : [
     { path: "/", label: "Home", icon: Shield },
     { path: "/learn", label: "Learn", icon: BookOpen },
     { path: "/quiz", label: "Quiz", icon: Brain },
+    { path: "/resources", label: "Report Fraud", icon: AlertTriangle },
   ];
 
   return (

@@ -3,6 +3,145 @@ import { articles, quizzes, quizAttempts } from "@shared/schema";
 
 const articleData = [
   {
+    title: "How to Report Cyber Fraud in India: Complete Guide",
+    slug: "how-to-report-cyber-fraud-india",
+    category: "data-privacy",
+    excerpt: "Step-by-step guide on how to report cyber fraud to Indian authorities and protect yourself from cybercriminals.",
+    content: `
+      <h2>Understanding Cyber Fraud</h2>
+      <p>Cyber fraud is a serious crime where criminals use the internet or digital devices to deceive individuals and steal money, personal information, or data. In India, reporting cyber fraud is crucial for protecting yourself and others.</p>
+
+      <h2>Step-by-Step Guide to Report Cyber Fraud in India</h2>
+
+      <h3>Step 1: Gather Evidence</h3>
+      <ul>
+        <li>Collect all evidence of the cyber fraud including screenshots of suspicious emails or messages</li>
+        <li>Save transaction details showing unauthorized payments</li>
+        <li>Keep records of any communication with the fraudster</li>
+        <li>Note down the website URL or app name used for fraud</li>
+        <li>Save phone numbers or email addresses of the fraudster</li>
+      </ul>
+
+      <h3>Step 2: Document All Details</h3>
+      <p><strong>Write down the following information:</strong></p>
+      <ul>
+        <li>Date and time of the fraud</li>
+        <li>Amount of money involved</li>
+        <li>Method used (email phishing, fake website, SMS scam, dating scam, etc.)</li>
+        <li>Contact information of the fraudster if available</li>
+        <li>Bank or payment method used</li>
+        <li>Any account numbers involved</li>
+      </ul>
+
+      <h3>Step 3: Preserve Evidence Safely</h3>
+      <p>Do not delete any evidence:</p>
+      <ul>
+        <li>Save emails in a separate folder</li>
+        <li>Take screenshots of websites or messages</li>
+        <li>Back up all files to a safe location</li>
+        <li>Keep copies of bank statements showing fraudulent transactions</li>
+      </ul>
+
+      <h3>Step 4: File Report on National Cyber Crime Portal</h3>
+      <p><strong>Visit: https://cybercrime.gov.in/</strong></p>
+      <ul>
+        <li>Click on "Report" button</li>
+        <li>Select the type of cyber crime</li>
+        <li>Fill in all required information accurately</li>
+        <li>Attach screenshots and evidence</li>
+        <li>Submit your complaint</li>
+      </ul>
+
+      <h3>Step 5: Get Complaint Number</h3>
+      <p>After submission, you will receive:</p>
+      <ul>
+        <li>A unique complaint number</li>
+        <li>Confirmation email with complaint details</li>
+        <li>Reference number for future follow-up</li>
+        <li>Save all this information for your records</li>
+      </ul>
+
+      <h3>Step 6: File FIR (First Information Report) at Police Station</h3>
+      <p>For serious cyber fraud cases:</p>
+      <ul>
+        <li>Visit your nearest Cyber Police Station or local police station</li>
+        <li>Bring your complaint number from NCRP portal</li>
+        <li>Provide all evidence documents</li>
+        <li>File an FIR (First Information Report)</li>
+        <li>Get a copy of the FIR for your records</li>
+      </ul>
+
+      <h3>Step 7: Notify Your Bank Immediately</h3>
+      <p>If financial fraud is involved:</p>
+      <ul>
+        <li>Call your bank's customer care hotline immediately</li>
+        <li>Report unauthorized transactions</li>
+        <li>Request to freeze your bank accounts if necessary</li>
+        <li>File a complaint with your bank's fraud department</li>
+        <li>Request a written acknowledgment of your complaint</li>
+        <li>Consider disputing the transactions with your credit card company</li>
+      </ul>
+
+      <h3>Step 8: Monitor Your Accounts Regularly</h3>
+      <p>After reporting fraud:</p>
+      <ul>
+        <li>Check your bank account statements frequently</li>
+        <li>Monitor credit card transactions daily</li>
+        <li>Check credit score on free portals like CIBIL or Experian</li>
+        <li>Consider placing a fraud alert with credit bureaus</li>
+        <li>Use credit monitoring services if available</li>
+      </ul>
+
+      <h2>Important Indian Cyber Crime Reporting Portals</h2>
+      <p><strong>National Cyber Crime Reporting Portal (NCRP)</strong></p>
+      <ul>
+        <li>Website: https://cybercrime.gov.in/</li>
+        <li>Available 24/7 for online complaints</li>
+        <li>Anonymous reporting option available</li>
+        <li>Track complaint status online</li>
+      </ul>
+
+      <p><strong>Contact Numbers:</strong></p>
+      <ul>
+        <li>National Cyber Crime Portal: 1930 (Toll-free)</li>
+        <li>Police Emergency: 100</li>
+        <li>RBI Anti-Fraud: 155260</li>
+      </ul>
+
+      <h2>Rights and Protections</h2>
+      <p>When you report cyber fraud in India:</p>
+      <ul>
+        <li>Your complaint is registered with law enforcement</li>
+        <li>Investigation is initiated by cyber police</li>
+        <li>You can track your complaint status online</li>
+        <li>You're protected under cybercrime laws</li>
+        <li>Evidence is preserved for legal proceedings</li>
+      </ul>
+
+      <h2>Prevention Tips</h2>
+      <p>To avoid cyber fraud in the future:</p>
+      <ul>
+        <li>Never share your OTP, password, or banking details with anyone</li>
+        <li>Verify email addresses carefully before clicking links</li>
+        <li>Use strong, unique passwords for each account</li>
+        <li>Enable two-factor authentication on all accounts</li>
+        <li>Be cautious of unsolicited phone calls or messages</li>
+        <li>Use official websites and apps only</li>
+      </ul>
+
+      <h2>Support Resources</h2>
+      <p>If you need help or support after cyber fraud:</p>
+      <ul>
+        <li>Contact your local cyber police station</li>
+        <li>Call the National Cyber Crime Portal helpline</li>
+        <li>Visit https://cybercrime.gov.in/ for resources</li>
+        <li>Contact consumer protection departments</li>
+      </ul>
+    `,
+    readTime: 12,
+    difficulty: "beginner",
+  },
+  {
     title: "Understanding Phishing: How to Spot Fake Emails",
     slug: "understanding-phishing-spot-fake-emails",
     category: "phishing",

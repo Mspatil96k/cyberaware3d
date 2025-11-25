@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { AIChat } from "@/components/AIChat";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
@@ -13,6 +14,7 @@ import Learn from "@/pages/Learn";
 import ArticleDetail from "@/pages/ArticleDetail";
 import QuizPage from "@/pages/Quiz";
 import Dashboard from "@/pages/Dashboard";
+import Resources from "@/pages/Resources";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -27,10 +29,12 @@ function Router() {
           <Route path="/article/:slug" component={ArticleDetail} />
           <Route path="/quiz" component={QuizPage} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/resources" component={Resources} />
           <Route component={NotFound} />
         </Switch>
       </main>
       <Footer />
+      <AIChat />
     </div>
   );
 }

@@ -1,111 +1,196 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { createServer as createHttpServer } from "node:http";
+import { type Express, type Request, type Response } from "express";
+import { db } from "./db";
+import { articles, quizzes, quizAttempts } from "@shared/schema";
 import { insertQuizAttemptSchema } from "@shared/schema";
-import { z } from "zod";
+import { eq, desc } from "drizzle-orm";
+import { requireAuth } from "./middleware";
+import { setupAuth } from "./replitAuth";
+import OpenAI from "openai";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || "",
+});
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+export async function registerRoutes(app: Express) {
+  const server = createHttpServer(app);
+  
+  // Setup authentication
+  await setupAuth(app, server);
+
+  // Articles endpoints
+  app.get("/api/articles", async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json(user);
+      const allArticles = await db.query.articles.findMany({
+        orderBy: desc(articles.createdAt),
+      });
+      res.json(allArticles);
     } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      res.status(500).json({ error: "Failed to fetch articles" });
     }
   });
 
-  // Article routes (public)
-  app.get('/api/articles', async (req, res) => {
+  app.get("/api/articles/:slug", async (req: Request, res: Response) => {
     try {
-      const articles = await storage.getAllArticles();
-      res.json(articles);
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-      res.status(500).json({ message: "Failed to fetch articles" });
-    }
-  });
-
-  app.get('/api/articles/:slug', async (req, res) => {
-    try {
-      const { slug } = req.params;
-      const article = await storage.getArticleBySlug(slug);
+      const article = await db.query.articles.findFirst({
+        where: eq(articles.slug, req.params.slug),
+      });
       if (!article) {
-        return res.status(404).json({ message: "Article not found" });
+        return res.status(404).json({ error: "Article not found" });
       }
       res.json(article);
     } catch (error) {
-      console.error("Error fetching article:", error);
-      res.status(500).json({ message: "Failed to fetch article" });
+      res.status(500).json({ error: "Failed to fetch article" });
     }
   });
 
-  // Quiz routes (public)
-  app.get('/api/quizzes/random', async (req, res) => {
+  // Quizzes endpoints
+  app.get("/api/quizzes/random", async (req: Request, res: Response) => {
     try {
-      const quiz = await storage.getRandomQuiz();
-      if (!quiz) {
-        return res.status(404).json({ message: "No quizzes available" });
+      const allQuizzes = await db.query.quizzes.findMany();
+      if (allQuizzes.length === 0) {
+        return res.status(404).json({ error: "No quizzes available" });
       }
-      res.json(quiz);
+      const randomQuiz = allQuizzes[Math.floor(Math.random() * allQuizzes.length)];
+      res.json(randomQuiz);
     } catch (error) {
-      console.error("Error fetching quiz:", error);
-      res.status(500).json({ message: "Failed to fetch quiz" });
+      res.status(500).json({ error: "Failed to fetch quiz" });
     }
   });
 
-  // Quiz attempt routes (protected)
-  app.post('/api/quiz-attempts', isAuthenticated, async (req: any, res) => {
+  app.get("/api/quizzes", async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
+      const allQuizzes = await db.query.quizzes.findMany();
+      res.json(allQuizzes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch quizzes" });
+    }
+  });
+
+  // Quiz attempts endpoints
+  app.post("/api/quiz-attempts", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { quizId, score, answers } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
       const validatedData = insertQuizAttemptSchema.parse({
-        ...req.body,
         userId,
+        quizId,
+        score,
+        answers,
       });
-      
-      const attempt = await storage.createQuizAttempt(validatedData);
-      res.json(attempt);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+
+      const attempt = await db.insert(quizAttempts).values(validatedData).returning();
+      res.json(attempt[0]);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to submit quiz" });
+    }
+  });
+
+  app.get("/api/quiz-attempts", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
       }
-      console.error("Error creating quiz attempt:", error);
-      res.status(500).json({ message: "Failed to submit quiz" });
-    }
-  });
 
-  app.get('/api/quiz-attempts', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const attempts = await storage.getQuizAttemptsByUser(userId);
+      const attempts = await db.query.quizAttempts.findMany({
+        where: eq(quizAttempts.userId, userId),
+        orderBy: desc(quizAttempts.completedAt),
+      });
+
       res.json(attempts);
     } catch (error) {
-      console.error("Error fetching quiz attempts:", error);
-      res.status(500).json({ message: "Failed to fetch quiz attempts" });
+      res.status(500).json({ error: "Failed to fetch quiz attempts" });
     }
   });
 
-  app.get('/api/quiz-attempts/recent', isAuthenticated, async (req: any, res) => {
+  app.get("/api/quiz-attempts/recent", requireAuth, async (req: Request, res: Response) => {
     try {
-      const userId = req.user.claims.sub;
-      const attempts = await storage.getRecentQuizAttemptsByUser(userId, 10);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const attempts = await db.query.quizAttempts.findMany({
+        where: eq(quizAttempts.userId, userId),
+        orderBy: desc(quizAttempts.completedAt),
+        limit: 5,
+      });
+
       res.json(attempts);
     } catch (error) {
-      console.error("Error fetching recent quiz attempts:", error);
-      res.status(500).json({ message: "Failed to fetch recent quiz attempts" });
+      res.status(500).json({ error: "Failed to fetch recent attempts" });
     }
   });
 
-  const httpServer = createServer(app);
+  // AI Chat endpoint
+  app.post("/api/chat", async (req: Request, res: Response) => {
+    try {
+      const { message, conversationHistory } = req.body;
 
-  return httpServer;
+      if (!message || typeof message !== "string") {
+        return res.status(400).json({ error: "Invalid message" });
+      }
+
+      // Prepare conversation history for OpenAI
+      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+        {
+          role: "system",
+          content: `You are CyberShield Assistant, a helpful AI chatbot specialized in cybersecurity awareness and education. You help users with:
+1. Cybersecurity best practices and tips
+2. How to report cyber fraud in India
+3. Understanding common cyber threats
+4. Protection strategies
+5. Information about Indian cyber crime reporting portals
+
+When users ask about reporting fraud, provide clear step-by-step guidance and mention official Indian resources like the National Cyber Crime Reporting Portal (cybercrime.gov.in).
+
+Be helpful, accurate, and encourage users to check official resources for important decisions. Keep responses concise and friendly.`,
+        },
+      ];
+
+      // Add conversation history
+      if (Array.isArray(conversationHistory)) {
+        conversationHistory.forEach((msg: any) => {
+          messages.push({
+            role: msg.sender === "user" ? "user" : "assistant",
+            content: msg.text,
+          });
+        });
+      }
+
+      // Add current user message
+      messages.push({
+        role: "user",
+        content: message,
+      });
+
+      // Call OpenAI API
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages,
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      const reply = response.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response. Please try again.";
+
+      res.json({ reply });
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      res.status(500).json({
+        error: error.message || "Failed to process chat message",
+      });
+    }
+  });
+
+  return server;
 }
